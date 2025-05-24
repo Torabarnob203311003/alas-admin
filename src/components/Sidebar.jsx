@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { FaUserFriends, FaCreditCard } from "react-icons/fa";
+import logo from "../assets/logo.png";
 
 export default function Sidebar({ sidebarOpen, onClose }) {
   return (
@@ -23,7 +24,7 @@ export default function Sidebar({ sidebarOpen, onClose }) {
         {/* Close button - mobile only */}
         <div className="mb-14">
           <img
-            src="./assets/logo.png"
+            src={logo}
             alt="Alaska Go Logo"
             className="w-[147.59px] h-[147.59px] object-contain mb-4"
           />

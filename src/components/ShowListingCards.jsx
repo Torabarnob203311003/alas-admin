@@ -54,22 +54,24 @@ function ShowListingCards({ listings = [] }) {
           ))
         )}
       </div>
-      <div className="flex justify-center items-center mt-4 gap-6">
-        <button
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
-          onClick={handlePreviousPage}
-          disabled={currentPage === 1}
-        >
-          &larr; Previous
-        </button>
-        <button
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
-          onClick={handleNextPage}
-          disabled={currentPage === Math.ceil(listings.length / itemsPerPage)}
-        >
-          Next &rarr;
-        </button>
-      </div>
+      {listings.length > itemsPerPage && (
+        <div className="flex justify-center items-center mt-4 gap-6">
+          <button
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+          >
+            &larr; Previous
+          </button>
+          <button
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            onClick={handleNextPage}
+            disabled={currentPage === Math.ceil(listings.length / itemsPerPage)}
+          >
+            Next &rarr;
+          </button>
+        </div>
+      )}
     </div>
   );
 }

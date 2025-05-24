@@ -1,5 +1,6 @@
 import React from "react";
 import { FaBars } from "react-icons/fa";
+import logo from "../assets/logo.png";
 
 export default function Navbar({ onMenuClick }) {
   return (
@@ -9,7 +10,7 @@ export default function Navbar({ onMenuClick }) {
     >
       <div className="flex items-center gap-4">
      <img
-  src="../assets/logo.png"
+  src={logo}
   alt="Logo"
   className="h-12 w-12 object-contain rounded-full"
 />

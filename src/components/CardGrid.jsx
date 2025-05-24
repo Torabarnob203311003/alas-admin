@@ -13,8 +13,8 @@ export default function CardsGrid() {
   const [editingCard, setEditingCard] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showListingCreateModal, setShowListingCreateModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 8;
 
   //  remove after work done
@@ -22,16 +22,16 @@ export default function CardsGrid() {
 
   // Fetch categories from API on mount
   useEffect(() => {
-    setIsLoading(true);
+    setLoading(true);
     axios
       .get("https://newrepo-4pyc.onrender.com/admin/get-all-categories")
       .then((res) => {
         setCardsData(res.data);
-        setIsLoading(false);
+        setLoading(false);
       })
       .catch((err) => {
         console.error("Failed to fetch categories:", err);
-        setIsLoading(false);
+        setLoading(false);
       });
   }, []);
 
@@ -42,6 +42,11 @@ export default function CardsGrid() {
     }
     return cardsData;
   }, [cardsData, editingCard]);
+
+  const paginatedCards = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredCards.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredCards, currentPage]);
 
   const handleEditSubmit = async (formData) => {
     try {
@@ -104,11 +109,11 @@ export default function CardsGrid() {
   };
 
   return (
-    <div className="flex h-full  relative">
+    <div className="flex h-full   ">
       {/* Left: Cards list (filtered if editing) */}
       <div
-        className={`flex-1 overflow-auto p-6 transition-all duration-300 ${
-          editingCard || showCreateModal ? "mr-[3.3333%]" : ""
+        className={`flex-1 overflow-auto p-12 transition-all duration-300 ${
+          editingCard || showCreateModal ? "" : ""
         }`}
       >
         <div className="flex justify-between items-center mt-5  ">
@@ -148,7 +153,7 @@ export default function CardsGrid() {
         ) : (
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
-              {filteredCards.slice(0, itemsPerPage).map((card) => (
+              {paginatedCards.map((card) => (
                 <Card
                   key={card.id}
                   card={{ ...card, title: card.name }} // Map `name` to `title` for compatibility
@@ -156,29 +161,28 @@ export default function CardsGrid() {
                 />
               ))}
             </div>
-            <div className="flex justify-center items-center mt-4 gap-6">
-              {!isLoading && (
-                <>
-                  <button
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                  >
-                    <span>&larr;</span>
-                  </button>
-                  <button
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
-                    onClick={handleNextPage}
-                    disabled={
-                      currentPage ===
-                      Math.ceil(filteredCards.length / itemsPerPage)
-                    }
-                  >
-                    <span>&rarr;</span>
-                  </button>
-                </>
-              )}
-            </div>
+
+            {/* Pagination Controls */}
+            {!loading && filteredCards.length > itemsPerPage && (
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded mr-2"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={handleNextPage}
+                  disabled={
+                    currentPage >= Math.ceil(filteredCards.length / itemsPerPage)
+                  }
+                  className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 import Cookies from "js-cookie";
 import axios from "axios";
@@ -123,9 +124,9 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <img
-            src="/assets/logo.png"
+            src={logo}
             alt="Logo"
-            className="h-20"
+            className="h-20 w-20"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src =
