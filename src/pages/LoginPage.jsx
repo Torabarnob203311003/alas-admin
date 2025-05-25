@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import logo from "../assets/logo.png";
 
 import Cookies from "js-cookie";
-
-import ApiService from "../components/fetch/ApiService";
 import axios from "axios";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // For show/hide toggle
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -18,64 +18,48 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(""); // Clear previous errors
+    setError("");
 
     try {
       const res = await axios.post(
         "https://newrepo-4pyc.onrender.com/admin/login",
-        {
-          email,
-          password,
-        },
+        { email, password },
         {
           headers: {
             "Content-Type": "application/json",
-            //"Authorization": `Bearer ${localStorage.getItem("token")}`,
-            // Add any other headers you need
           },
-          withCredentials: true, // MUST be here
+          withCredentials: true,
         }
       );
 
-      console.log("Server response:", res);
-
-      // Check if we received any response data
       if (res.data) {
-        console.log("Response data:", res.data);
-
-        // Extract tokens from response
         const { refreshToken, accessToken } = res.data;
 
         if (refreshToken && accessToken) {
-          // Store tokens in cookies (more secure than localStorage)
           Cookies.set("refreshToken", refreshToken, {
-            expires: 7, // 7 days
-            secure: window.location.protocol === "https:", // secure if using HTTPS
-            sameSite: "strict",
-          });
-
-          Cookies.set("accessToken", accessToken, {
-            expires: 1, // 1 day
+            expires: 7,
             secure: window.location.protocol === "https:",
             sameSite: "strict",
           });
 
-          // Also save a copy in localStorage as fallback for your existing code
+          Cookies.set("accessToken", accessToken, {
+            expires: 1,
+            secure: window.location.protocol === "https:",
+            sameSite: "strict",
+          });
+
           localStorage.setItem("token", accessToken);
 
-          console.log("Tokens saved successfully in cookies");
           setTimeout(() => {
-            window.location.href = "/"; // Force a hard reload
+            window.location.href = "/";
           }, 1000);
           return;
         }
 
-        // Fallback for different token response formats
         const token =
           res.data.token || res.data.accessToken || res.data.access_token;
 
         if (token) {
-          // Store in both cookies and localStorage for compatibility
           Cookies.set("accessToken", token, {
             expires: 1,
             secure: window.location.protocol === "https:",
@@ -83,17 +67,11 @@ export default function LoginPage() {
           });
           localStorage.setItem("token", token);
 
-          console.log("Token saved successfully in cookies");
           setTimeout(() => {
-            window.location.href = "/"; // Force a hard reload
+            window.location.href = "/";
           }, 1000);
         } else {
-          console.warn("No token found in response:", res.data);
-
           if (res.data.success || res.data.message === "Login successful") {
-            console.log(
-              "Login appears successful despite no token, proceeding..."
-            );
             navigate("/");
           } else {
             setError("Login successful but no authentication token received");
@@ -102,9 +80,8 @@ export default function LoginPage() {
       } else {
         setError("No data received from server");
       }
-      //const success = await ApiService.loginAdmin({ email, password });
+
       if (res.status === 200) {
-        // Assuming the login was successful, you can navigate to the dashboard or home page
         navigate("/");
       } else {
         setError("Invalid email or password");
@@ -113,9 +90,6 @@ export default function LoginPage() {
       console.error("Login error:", err);
 
       if (err.response) {
-        console.log("Error status:", err.response.status);
-        console.log("Error data:", err.response.data);
-
         setError(
           err.response.data?.message ||
             `Server error: ${err.response.status}. ${
@@ -135,14 +109,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex  items-center justify-center bg-gray-100 ">
-      <div className="bg-white w-full max-w-sm rounded-lg p-8 shadow-md">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="bg-white w-full max-w-screen-xl sm:max-w-md rounded-lg p-6 sm:p-8 shadow-md">
         {/* Logo */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4 sm:mb-6">
           <img
-            src="/assets/logo.png"
+            src={logo}
             alt="Logo"
-            className="h-20"
+            className="h-76 w-76 object-contain"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src =
@@ -152,19 +126,21 @@ export default function LoginPage() {
         </div>
 
         {/* Title */}
-        <h2 className="text-2xl font-semibold text-center mb-6">Log In</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold text-center mb-4 sm:mb-6">
+          Log In
+        </h2>
 
         {/* Form */}
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleLogin} className="space-y-4">
           {/* Email */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              Email <span className="text-red-500">*</span>
+          <div>
+            <label className="block text-sm text-left font-medium mb-1">
+              Email
             </label>
             <input
               type="email"
               placeholder="Enter your email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -172,36 +148,48 @@ export default function LoginPage() {
           </div>
 
           {/* Password */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-1">
-              Password <span className="text-red-500">*</span>
+          <div>
+            <label className="block text-sm text-left font-medium mb-1">
+              Password
             </label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-600 hover:text-black focus:outline-none"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
-          {/* Error message */}
+          {/* Error */}
           {error && (
-            <div className="mb-4 text-sm text-red-600 text-center">{error}</div>
+            <div className="text-sm text-red-600 text-center bg-red-50 p-2 rounded border border-red-200">
+              {error}
+            </div>
           )}
 
-          {/* Log In Button */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md text-sm font-medium transition disabled:opacity-70"
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 sm:py-2.5 rounded-md text-sm font-medium transition disabled:opacity-70 mt-6"
           >
             {isLoading ? "Logging in..." : "Log in"}
           </button>
         </form>
 
-        <div className="mt-4 text-center">
+        {/* Signup Link */}
+        <div className="mt-4 sm:mt-6 text-center">
           <span
             className="text-sm text-blue-600 hover:underline cursor-pointer"
             onClick={() => navigate("/signup")}
