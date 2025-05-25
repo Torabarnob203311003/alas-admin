@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // ShowListingCards displays a grid of listing cards
-function ShowListingCards({ listings = [] }) {
+function ShowListingCards({ listings = [], loading = false, error = null }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
+  // Debug log to see incoming listings
+  console.log("ShowListingCards - Received listings:", listings);
+
+  // Calculate paginated listings directly from props
   const paginatedListings = listings.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // Reset page when listings change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [listings]);
 
   const handleNextPage = () => {
     if (currentPage < Math.ceil(listings.length / itemsPerPage)) {
@@ -22,11 +31,37 @@ function ShowListingCards({ listings = [] }) {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-white border border-zinc-300 rounded-lg overflow-hidden shadow-sm animate-pulse">
+            <div className="w-full h-40 bg-gray-200" />
+            <div className="p-4">
+              <div className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
+              <div className="h-4 bg-gray-200 rounded w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-500 p-4 bg-red-50 rounded-lg">
+        Error loading listings: {error}
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {paginatedListings.length === 0 ? (
-          <div className="col-span-full text-center text-gray-500 py-8">No listings found.</div>
+          <div className="col-span-full text-center text-gray-500 py-8">
+            No listings found.
+          </div>
         ) : (
           paginatedListings.map((listing) => (
             <div
@@ -44,31 +79,41 @@ function ShowListingCards({ listings = [] }) {
                   No Image
                 </div>
               )}
-              <div className="p-4 flex-1 flex flex-col">
-                <h2 className="text-lg font-semibold mb-1 text-gray-900 truncate">{listing.name}</h2>
+              <div className="p-4 flex-grow">
+                <h3 className="font-semibold text-gray-900 mb-1">
+                  {listing.name}
+                </h3>
                 {listing.description && (
-                  <p className="text-sm text-gray-600 mb-2 truncate">{listing.description}</p>
+                  <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                    {listing.description}
+                  </p>
+                )}                {listing.location && (
+                  <p className="text-gray-500 text-sm">
+                    {listing.location}
+                  </p>
                 )}
               </div>
             </div>
           ))
         )}
       </div>
+
+      {/* Pagination Controls */}
       {listings.length > itemsPerPage && (
-        <div className="flex justify-center items-center mt-4 gap-6">
+        <div className="flex justify-center mt-4 space-x-4">
           <button
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
           >
-            &larr; Previous
+            Previous
           </button>
           <button
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
             onClick={handleNextPage}
-            disabled={currentPage === Math.ceil(listings.length / itemsPerPage)}
+            disabled={currentPage >= Math.ceil(listings.length / itemsPerPage)}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
           >
-            Next &rarr;
+            Next
           </button>
         </div>
       )}

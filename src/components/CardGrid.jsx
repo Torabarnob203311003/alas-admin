@@ -20,19 +20,23 @@ export default function CardsGrid() {
   //  remove after work done
   console.log("cardsData", cardsData);
 
+  const fetchCardData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        "https://newrepo-4pyc.onrender.com/admin/get-all-categories"
+      );
+      setCardsData(response.data);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch categories from API on mount
   useEffect(() => {
-    setLoading(true);
-    axios
-      .get("https://newrepo-4pyc.onrender.com/admin/get-all-categories")
-      .then((res) => {
-        setCardsData(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch categories:", err);
-        setLoading(false);
-      });
+    fetchCardData();
   }, []);
 
   // Filter cards by selected editing category's title
@@ -84,16 +88,29 @@ export default function CardsGrid() {
     setCardsData([newCard, ...cardsData]);
     setShowCreateModal(false);
   };
+  const handleCreateListing = async () => {
+    try {
+      // Close the modal first
+      setShowListingCreateModal(false);
 
-  const handleCreateListing = (newListing) => {
-    setCardsData((prev) =>
-      prev.map((card) =>
-        card.id === editingCard.id
-          ? { ...card, listings: [newListing, ...card.listings] }
-          : card
-      )
-    );
-    console.log("New listing created:", newListing);
+      // Fetch fresh data
+      const freshData = await axios.get(
+        "https://newrepo-4pyc.onrender.com/admin/get-all-categories"
+      );
+      setCardsData(freshData.data);
+
+      // Update the editing card with fresh data
+      if (editingCard) {
+        const updatedCard = freshData.data.find(
+          (card) => card._id === editingCard._id
+        );
+        if (updatedCard) {
+          setEditingCard(updatedCard);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating data after creating listing:", error);
+    }
   };
 
   const handleNextPage = () => {
@@ -117,7 +134,7 @@ export default function CardsGrid() {
         }`}
       >
         <div className="flex justify-between items-center mt-5  ">
-          {/* Show "All Listings" text and "Create New List" button for the selected card */}
+          {/* Show "All Listings" text and "Create New List" button for the selected card */}{" "}
           {editingCard ? (
             <div
               className="flex justify-between items-center mt-10"
@@ -126,7 +143,9 @@ export default function CardsGrid() {
               <h1 className="text-xl font-bold">All Listings</h1>
               <button
                 className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded"
-                onClick={() => setShowListingCreateModal(true)}
+                onClick={() => {
+                  setShowListingCreateModal(true);
+                }}
               >
                 Create New Listing
               </button>
@@ -164,11 +183,13 @@ export default function CardsGrid() {
 
             {/* Pagination Controls */}
             {!loading && filteredCards.length > itemsPerPage && (
-              <div className="flex justify-center mt-4">
+              <div className="flex justify-center mt-4 me-20 gap-9">
+                {" "}
+                {/* Added gap-4 for spacing */}
                 <button
                   onClick={handlePreviousPage}
                   disabled={currentPage === 1}
-                  className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded mr-2"
+                  className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
                 >
                   Previous
                 </button>
@@ -177,7 +198,7 @@ export default function CardsGrid() {
                   disabled={
                     currentPage >= Math.ceil(filteredCards.length / itemsPerPage)
                   }
-                  className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+                  className="bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded"
                 >
                   Next
                 </button>
@@ -202,14 +223,13 @@ export default function CardsGrid() {
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreateSubmit}
         />
-      )}
-
+      )}{" "}
       {/* Create new listing modal */}
       {showListingCreateModal && (
         <CreateListingModal
           isOpen={showListingCreateModal}
           onClose={() => setShowListingCreateModal(false)}
-          onCreate={handleCreateListing}
+          onListingCreated={handleCreateListing}
           categoryName={editingCard?.name}
         />
       )}

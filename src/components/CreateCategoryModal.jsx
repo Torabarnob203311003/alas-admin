@@ -5,16 +5,16 @@ export default function CreateCategoryModal({ onClose, onSubmit }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [photo, setPhoto] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   const handlePhotoUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
       setPhoto(e.target.files[0]);
     }
   };
-
-  // Update the handleSubmit function to send form-data to the API
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsCreating(true);
 
     const formData = new FormData();
     formData.append("name", title);
@@ -24,6 +24,7 @@ export default function CreateCategoryModal({ onClose, onSubmit }) {
     }
 
     try {
+      // Create the category
       const response = await fetch(
         "https://newrepo-4pyc.onrender.com/admin/create-category",
         {
@@ -35,16 +36,33 @@ export default function CreateCategoryModal({ onClose, onSubmit }) {
         }
       );
 
-      if (!response === 200) {
-        console.error("Failed to create category:", response.statusText);
+      if (!response.ok) {
         throw new Error(`Failed to create category: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      console.log("Category created successfully:", result);
-      onSubmit(result);
+      // After successful creation, fetch fresh data
+      const freshResponse = await fetch(
+        "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (!freshResponse.ok) {
+        throw new Error("Failed to fetch updated categories");
+      }
+
+      const freshData = await freshResponse.json();
+      console.log("Category created and data refreshed:", freshData);
+      onSubmit(freshData);
+      onClose(); // Close the modal after successful creation
     } catch (error) {
-      console.error("Error creating category:", error);
+      console.error("Error:", error);
+      alert(error.message);
+    } finally {
+      setIsCreating(false);
     }
   }; // Properly close the handleSubmit function
 
@@ -108,13 +126,22 @@ export default function CreateCategoryModal({ onClose, onSubmit }) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter description"
             />
-          </div>
-
-          <button
+          </div>          <button
             type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition"
+            disabled={isCreating}
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition disabled:opacity-50 flex items-center justify-center"
           >
-            Add Category
+            {isCreating ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Adding Category...
+              </>
+            ) : (
+              'Add Category'
+            )}
           </button>
         </form>
       </div>

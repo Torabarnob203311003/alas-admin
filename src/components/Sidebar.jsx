@@ -21,12 +21,12 @@ export default function Sidebar({ sidebarOpen, onClose }) {
         } md:translate-x-0 md:fixed`}
         style={{ overflowY: "auto" }}
       >
-        {/* Close button - mobile only */}
-        <div className="mb-14">
+        {/* Close button - mobile only */}        <div className="mb-14 flex justify-center">
           <img
             src={logo}
             alt="Alaska Go Logo"
-            className="w-[147.59px] h-[147.59px] object-contain mb-4"
+            className="min-w-[850px] h-auto object-contain"
+            style={{ width: '100%', maxHeight: '200px' }}
           />
         </div>
 

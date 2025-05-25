@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+//import { useNavigate } from 'react-router-dom';
 
 function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated }) {
+  //const navigate = useNavigate();
+  
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState(null);
@@ -32,7 +35,6 @@ function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated })
   const handleClose = () => {
     resetForm();
     onClose();
-    window.location.href = '/cards'; // Redirect to the cards grid section
   };
 
   if (!isOpen) return null;
@@ -80,9 +82,7 @@ function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated })
 
       // Store the created listing data
       setCreatedListing(responseData);
-      setShowSuccess(true);
-
-      // Notify parent component to update the listings
+      setShowSuccess(true);      // Notify parent component to update the listings
       if (onListingCreated) {
         onListingCreated(responseData);
       }
@@ -90,7 +90,6 @@ function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated })
       // Auto-close modal after showing success message
       setTimeout(() => {
         handleClose();
-        window.location.reload(); // Refresh the page to show updated cards
       }, 2000);
 
     } catch (error) {
@@ -122,7 +121,7 @@ function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated })
               </svg>
               <h3 className="text-lg font-semibold text-green-800">Listing Created Successfully!</h3>
             </div>
-            <div className="space-y-1 text-sm text-green-700">
+            <div className="space-y-1  text-sm text-green-700 text-left">
               <p><strong>Name:</strong> {createdListing.name}</p>
               {createdListing.description && (
                 <p><strong>Description:</strong> {createdListing.description}</p>
@@ -142,7 +141,7 @@ function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated })
         {!showSuccess && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-left">
                 Name
                 <span className="text-red-500">*</span>
               </label>
@@ -157,7 +156,7 @@ function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated })
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-left">
                 Description
               </label>
               <textarea
@@ -170,7 +169,7 @@ function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated })
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-1">Location</label>
+              <label className="block text-sm font-medium mb-1 text-left">Location</label>
               <input
                 type="text"
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -181,7 +180,7 @@ function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated })
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-left">
                 Referral Link
               </label>
               <input
@@ -195,7 +194,7 @@ function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated })
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-2 text-left">
                 Photo
               </label>
               <label className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -224,7 +223,7 @@ function CreateListingModal({ isOpen, onClose, categoryName, onListingCreated })
             </div>
             
             {error && (
-              <div className="text-red-500 text-sm bg-red-50 p-3 rounded border border-red-200">
+              <div className="text-red-500 text-sm bg-red-50 p-3 rounded border border-red-200 text-left">
                 {error}
               </div>
             )}
