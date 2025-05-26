@@ -25,7 +25,7 @@ export default function Sidebar({ sidebarOpen, onClose }) {
           <img
             src={logo}
             alt="Alaska Go Logo"
-            className="min-w-[850px] h-auto object-contain"
+            className=" h-auto object-contain"
             style={{ width: '100%', maxHeight: '200px' }}
           />
         </div>

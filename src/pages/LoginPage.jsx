@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext.jsx";
+//import { useAuth } from "../contexts/AuthContext.jsx";
 import logo from "../assets/logo.png";
 
 import Cookies from "js-cookie";
 import axios from "axios";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+ // const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false); // For show/hide toggle
