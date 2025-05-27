@@ -51,7 +51,8 @@ export default function LoginPage() {
           localStorage.setItem("token", accessToken);
 
           setTimeout(() => {
-            window.location.href = "/";
+            navigate("/dashboard/users"); // Navigate to the desired route
+            window.location.reload(); // Reload the page after navigation
           }, 1000);
           return;
         }
@@ -68,7 +69,8 @@ export default function LoginPage() {
           localStorage.setItem("token", token);
 
           setTimeout(() => {
-            window.location.href = "/";
+            navigate("/dashboard/users"); // Navigate to the desired route
+            window.location.reload(); // Reload the page after navigation
           }, 1000);
         } else {
           if (res.data.success || res.data.message === "Login successful") {
