@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import axios from "axios";
 import Card from "./Card";
 import EditCategorySidebar from "./EditCategorySidebar";
@@ -16,16 +16,20 @@ export default function CardsGrid() {
   const [showListingCreateModal, setShowListingCreateModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [shouldRefetch, setShouldRefetch] = useState(false);
 
   // Add your token here if needed
   const token = "your-token-here";
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+  const config = useMemo(
+    () => ({
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }),
+    [token]
+  );
 
-  const fetchCardData = async () => {
+  const fetchCardData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(
@@ -38,11 +42,38 @@ export default function CardsGrid() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [config]);
 
   useEffect(() => {
     fetchCardData();
-  }, []);
+  }, [fetchCardData]);
+
+  useEffect(() => {
+    if (shouldRefetch) {
+      const fetchUpdatedData = async () => {
+        try {
+          const freshData = await axios.get(
+            "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
+            config
+          );
+          setCardsData(freshData.data);
+
+          // Re-fetch data a second time
+          const secondFetchData = await axios.get(
+            "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
+            config
+          );
+          setCardsData(secondFetchData.data);
+        } catch (error) {
+          console.error("Error fetching updated categories:", error);
+        } finally {
+          setShouldRefetch(false);
+        }
+      };
+
+      fetchUpdatedData();
+    }
+  }, [shouldRefetch, config]);
 
   const filteredCards = useMemo(() => {
     if (editingCard) {
@@ -84,6 +115,12 @@ export default function CardsGrid() {
           prev.map((card) => (card.id === updatedCard.id ? updatedCard : card))
         );
         setEditingCard(null);
+      } else if (response.status === 403) {
+        console.error("Authorization failed. Token might be invalid or expired.");
+        alert("Your session has expired. Please log in again.");
+        localStorage.removeItem("token");
+        window.location.href = "/login"; // Redirect to login page
+        return;
       } else {
         console.error("Failed to save card changes to the database.");
       }
@@ -96,53 +133,63 @@ export default function CardsGrid() {
     try {
       setLoading(true);
 
-      // Convert photo to base64 if present
-      let base64Image = "";
+      // Create FormData for multipart upload
+      const data = new FormData();
+      data.append("name", formData.title);
+      data.append("description", formData.description);
       if (formData.photo) {
-        base64Image = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(formData.photo);
-        });
+        data.append("image", formData.photo);
       }
 
-      const postData = {
-        title: formData.title,
-        description: formData.description,
-        image: base64Image,
+      console.log("Request payload (FormData):", data); // Log the payload
+
+      // Dynamically retrieve token from localStorage
+      const token = localStorage.getItem("token");
+      const dynamicConfig = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       };
 
       const response = await axios.post(
         "https://newrepo-4pyc.onrender.com/admin/create-category",
-        postData,
-        config
+        data,
+        dynamicConfig
       );
 
       if (response.status === 201 || response.status === 200) {
-        // After create success, fetch updated list from API
-        const freshDataResponse = await axios.get(
-          "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
-          config
-        );
+        const newCategory = response.data;
+        console.log("New category created:", newCategory);
 
-        if (freshDataResponse.status === 200) {
-          const updatedCards = freshDataResponse.data;
-          setCardsData(updatedCards);
-
-          // Set current page to last page so new card is visible
+        // Append the new card to the UI instantly
+        setCardsData((prev) => {
+          const updatedCards = [
+            ...prev,
+            {
+              name: newCategory.name,
+              image: newCategory.image,
+              description: newCategory.description,
+            },
+          ];
           const lastPage = Math.ceil(updatedCards.length / itemsPerPage);
-          setCurrentPage(lastPage);
+          setCurrentPage(lastPage); // Set current page to last page
+          return updatedCards;
+        });
 
-          setShowCreateModal(false);
-        } else {
-          console.error("Failed to fetch updated categories");
-        }
+        // Trigger re-fetch of data
+        setShouldRefetch(true);
+
+        setShowCreateModal(false);
       } else {
-        console.error("Failed to create new category");
+        console.error("Failed to create category", response.data);
       }
     } catch (error) {
-      console.error("Error creating new category:", error);
+      console.error(
+        "Error creating new category:",
+        error.response?.data || error.message
+      );
+      alert("Failed to create category. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -31,6 +31,9 @@ function ShowListingCards({ listings = [], loading = false, error = null }) {
     }
   };
 
+  console.log("Current Page:", currentPage);
+  console.log("Paginated Listings:", paginatedListings);
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -54,6 +57,9 @@ function ShowListingCards({ listings = [], loading = false, error = null }) {
       </div>
     );
   }
+
+  // Updated pagination visibility logic
+  const shouldShowPagination = listings.length > itemsPerPage;
 
   return (
     <div>
@@ -99,7 +105,7 @@ function ShowListingCards({ listings = [], loading = false, error = null }) {
       </div>
 
       {/* Pagination Controls */}
-      {listings.length > itemsPerPage && (
+      {shouldShowPagination && (
         <div className="flex justify-center mt-4 space-x-4">
           <button
             onClick={handlePreviousPage}

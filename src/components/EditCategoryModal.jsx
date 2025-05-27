@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
-export default function CreateCategoryModal({ onClose, onSubmit }) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+export default function EditCategoryModal({ onClose, onSubmit, category }) {
+  const [title, setTitle] = useState(category?.name || "");
+  const [description, setDescription] = useState(category?.description || "");
   const [photo, setPhoto] = useState(null);
 
   const handlePhotoUpload = (e) => {
@@ -13,11 +13,13 @@ export default function CreateCategoryModal({ onClose, onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ title, description, photo });
+    const updatedCategory = { _id: category._id, title, description, photo };
+    onSubmit(updatedCategory);
+    onClose();
   };
 
   return (
-    <div className="fixed  flex items-center justify-center bg-black bg-opacity-50  overflow-auto">
+    <div className="fixed flex items-center justify-center bg-black bg-opacity-50 overflow-auto">
       <div
         className="bg-white rounded-lg p-6 max-w-md w-full relative shadow-lg overflow-hidden"
         style={{ maxHeight: "90vh" }}
@@ -29,11 +31,11 @@ export default function CreateCategoryModal({ onClose, onSubmit }) {
         >
           &times;
         </button>
-        <h2 className="text-2xl font-bold mb-6"></h2>
+        <h2 className="text-2xl font-bold mb-6">Edit Category</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block mb-2 font-semibold text-gray-700">Photo</label>
-            <label className="block w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer flex items-center justify-center bg-gray-50 hover:bg-gray-100">
+            <label className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer flex items-center justify-center bg-gray-50 hover:bg-gray-100">
               {photo ? (
                 <img
                   src={URL.createObjectURL(photo)}
@@ -81,7 +83,7 @@ export default function CreateCategoryModal({ onClose, onSubmit }) {
             type="submit"
             className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition"
           >
-            Add Category
+            Save Changes
           </button>
         </form>
       </div>

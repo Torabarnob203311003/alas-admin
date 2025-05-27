@@ -12,52 +12,20 @@ export default function CreateCategoryModal({ onClose, onSubmit }) {
       setPhoto(e.target.files[0]);
     }
   };
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setIsCreating(true);
 
-    const formData = new FormData();
-    formData.append("name", title);
-    formData.append("description", description);
-    if (photo) {
-      formData.append("image", photo);
-    }
+    // Pass a plain object to onSubmit
+    const formData = {
+      title,
+      description,
+      photo,
+    };
 
     try {
-      // Create the category
-      const response = await fetch(
-        "https://newrepo-4pyc.onrender.com/admin/create-category",
-        {
-          method: "POST",
-          body: formData,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to create category: ${response.statusText}`);
-      }
-
-      // After successful creation, fetch fresh data
-      const freshResponse = await fetch(
-        "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (!freshResponse.ok) {
-        throw new Error("Failed to fetch updated categories");
-      }
-
-      const freshData = await freshResponse.json();
-      console.log("Category created and data refreshed:", freshData);
-      onSubmit(freshData);
-      onClose(); // Close the modal after successful creation
+      onSubmit(formData); // Pass the plain object
+      onClose(); // Close the modal after successful submission
     } catch (error) {
       console.error("Error:", error);
       alert(error.message);
