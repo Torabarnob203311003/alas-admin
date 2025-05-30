@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { FaEdit } from "react-icons/fa";
+import { MdDelete } from "react-icons/md";
 
-// ShowListingCards displays a grid of listing cards
-function ShowListingCards({ listings = [], loading = false, error = null }) {
+function ShowListingCards({
+  listings = [],
+  loading = false,
+  error = null,
+  onEditClick,    // New prop to handle edit clicks
+  onDeleteClick,  // Pass your existing delete handler here
+}) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // Debug log to see incoming listings
-  console.log("ShowListingCards - Received listings:", listings);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [listings]);
 
-  // Calculate paginated listings directly from props
   const paginatedListings = listings.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  // Reset page when listings change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [listings]);
 
   const handleNextPage = () => {
     if (currentPage < Math.ceil(listings.length / itemsPerPage)) {
@@ -31,14 +33,14 @@ function ShowListingCards({ listings = [], loading = false, error = null }) {
     }
   };
 
-  console.log("Current Page:", currentPage);
-  console.log("Paginated Listings:", paginatedListings);
-
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white border border-zinc-300 rounded-lg overflow-hidden shadow-sm animate-pulse">
+          <div
+            key={i}
+            className="bg-white border border-zinc-300 rounded-lg overflow-hidden shadow-sm animate-pulse"
+          >
             <div className="w-full h-40 bg-gray-200" />
             <div className="p-4">
               <div className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
@@ -58,7 +60,6 @@ function ShowListingCards({ listings = [], loading = false, error = null }) {
     );
   }
 
-  // Updated pagination visibility logic
   const shouldShowPagination = listings.length > itemsPerPage;
 
   return (
@@ -93,18 +94,34 @@ function ShowListingCards({ listings = [], loading = false, error = null }) {
                   <p className="text-gray-600 text-sm mb-2 line-clamp-2">
                     {listing.description}
                   </p>
-                )}                {listing.location && (
-                  <p className="text-gray-500 text-sm">
-                    {listing.location}
-                  </p>
                 )}
+                {listing.location && (
+                  <p className="text-gray-500 text-sm">{listing.location}</p>
+                )}
+              </div>
+              <div className="flex justify-between px-4 pb-2">
+                <button
+                  type="button"
+                  onClick={() => onDeleteClick(listing)}
+                  className="bg-red-500 hover:bg-red-600 p-2 rounded-lg text-white transition"
+                  aria-label={`Delete ${listing.name}`}
+                >
+                  <MdDelete size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onEditClick(listing)}
+                  className="bg-green-600 hover:bg-green-700 p-2 rounded-lg text-white transition"
+                  aria-label={`Edit ${listing.name}`}
+                >
+                  <FaEdit size={20} />
+                </button>
               </div>
             </div>
           ))
         )}
       </div>
 
-      {/* Pagination Controls */}
       {shouldShowPagination && (
         <div className="flex justify-center mt-4 space-x-4">
           <button

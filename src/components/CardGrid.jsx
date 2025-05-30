@@ -12,14 +12,14 @@ const itemsPerPage = 8;
 export default function CardsGrid() {
   const [cardsData, setCardsData] = useState(initialCardsData);
   const [editingCard, setEditingCard] = useState(null);
+  const [editingListing, setEditingListing] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showListingCreateModal, setShowListingCreateModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [shouldRefetch, setShouldRefetch] = useState(false);
 
-  // Add your token here if needed
-  const token = "your-token-here";
+  const token = localStorage.getItem("token");
   const config = useMemo(
     () => ({
       headers: {
@@ -57,20 +57,12 @@ export default function CardsGrid() {
             config
           );
           setCardsData(freshData.data);
-
-          // Re-fetch data a second time
-          const secondFetchData = await axios.get(
-            "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
-            config
-          );
-          setCardsData(secondFetchData.data);
+          setShouldRefetch(false);
         } catch (error) {
           console.error("Error fetching updated categories:", error);
-        } finally {
           setShouldRefetch(false);
         }
       };
-
       fetchUpdatedData();
     }
   }, [shouldRefetch, config]);
@@ -101,31 +93,68 @@ export default function CardsGrid() {
 
   const showNextButton = !loading && paginatedCards.length === itemsPerPage;
 
-  const handleEditSubmit = async (formData) => {
+  const handleEditSubmit = (updatedCategories) => {
+    if (Array.isArray(updatedCategories)) {
+      setCardsData(updatedCategories);
+      setEditingCard(null);
+    } else {
+      console.error("Unexpected updated categories data:", updatedCategories);
+    }
+  };
+
+  // Unified delete handler for categories and listings
+  const handleDelete = async (itemToDelete, isListing = false) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${itemToDelete.name}"?`
+    );
+    if (!confirmed) return;
+
     try {
-      const response = await axios.put(
-        `https://newrepo-4pyc.onrender.com/admin/edit-category/${formData.id}`,
-        formData,
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const response = await axios.delete(
+        `https://newrepo-4pyc.onrender.com/admin/delete/${itemToDelete._id}`,
         config
       );
 
-      if (response.status === 200 && response.data) {
-        const updatedCard = response.data;
-        setCardsData((prev) =>
-          prev.map((card) => (card.id === updatedCard.id ? updatedCard : card))
-        );
-        setEditingCard(null);
-      } else if (response.status === 403) {
-        console.error("Authorization failed. Token might be invalid or expired.");
-        alert("Your session has expired. Please log in again.");
-        localStorage.removeItem("token");
-        window.location.href = "/login"; // Redirect to login page
-        return;
+      if (response.status === 200) {
+        if (isListing) {
+          // Remove listing from the editing category's listings
+          setEditingCard((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              listings: prev.listings.filter(
+                (listing) => listing._id !== itemToDelete._id
+              ),
+            };
+          });
+          alert("Listing deleted successfully.");
+        } else {
+          // Remove category from the main cardsData
+          setCardsData((prevCards) =>
+            prevCards.filter((card) => card._id !== itemToDelete._id)
+          );
+
+          if (editingCard && editingCard._id === itemToDelete._id) {
+            setEditingCard(null);
+          }
+          alert("Category deleted successfully.");
+        }
       } else {
-        console.error("Failed to save card changes to the database.");
+        alert("Failed to delete. Please try again.");
       }
     } catch (error) {
-      console.error("Error saving card changes:", error);
+      console.error("Error deleting item:", error);
+      alert("Error occurred while deleting.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -133,7 +162,6 @@ export default function CardsGrid() {
     try {
       setLoading(true);
 
-      // Create FormData for multipart upload
       const data = new FormData();
       data.append("name", formData.title);
       data.append("description", formData.description);
@@ -141,9 +169,6 @@ export default function CardsGrid() {
         data.append("image", formData.photo);
       }
 
-      console.log("Request payload (FormData):", data); // Log the payload
-
-      // Dynamically retrieve token from localStorage
       const token = localStorage.getItem("token");
       const dynamicConfig = {
         headers: {
@@ -160,9 +185,6 @@ export default function CardsGrid() {
 
       if (response.status === 201 || response.status === 200) {
         const newCategory = response.data;
-        console.log("New category created:", newCategory);
-
-        // Append the new card to the UI instantly
         setCardsData((prev) => {
           const updatedCards = [
             ...prev,
@@ -173,11 +195,10 @@ export default function CardsGrid() {
             },
           ];
           const lastPage = Math.ceil(updatedCards.length / itemsPerPage);
-          setCurrentPage(lastPage); // Set current page to last page
+          setCurrentPage(lastPage);
           return updatedCards;
         });
 
-        // Trigger re-fetch of data
         setShouldRefetch(true);
 
         setShowCreateModal(false);
@@ -217,6 +238,37 @@ export default function CardsGrid() {
     }
   };
 
+  const handleEditListing = (listing) => {
+    setEditingListing(listing);
+    setShowListingCreateModal(true);
+  };
+
+  // After editing a listing, refresh all categories & update editingCard
+  const handleUpdateListing = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
+        config
+      );
+      setCardsData(response.data);
+
+      const updatedCard = response.data.find(
+        (card) => card._id === editingCard._id
+      );
+      if (updatedCard) {
+        setEditingCard(updatedCard);
+      }
+
+      setEditingListing(null);
+      setShowListingCreateModal(false);
+    } catch (error) {
+      console.error("Failed to refresh categories after update:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex h-full">
       <div className="flex-1 overflow-auto p-12 transition-all duration-300">
@@ -253,7 +305,11 @@ export default function CardsGrid() {
           </div>
         ) : editingCard ? (
           <div className="mt-6">
-            <ShowListingCards listings={editingCard.listings || []} />
+            <ShowListingCards
+              listings={editingCard.listings || []}
+              onEditClick={handleEditListing}
+              onDeleteClick={(listing) => handleDelete(listing, true)} // Listing deletion
+            />
           </div>
         ) : (
           <div>
@@ -263,6 +319,7 @@ export default function CardsGrid() {
                   key={card.id || card._id}
                   card={{ ...card, title: card.name }}
                   onEditClick={setEditingCard}
+                  onDeleteClick={(card) => handleDelete(card, false)} // Category deletion
                 />
               ))}
             </div>
@@ -309,9 +366,14 @@ export default function CardsGrid() {
       {showListingCreateModal && (
         <CreateListingModal
           isOpen={showListingCreateModal}
-          onClose={() => setShowListingCreateModal(false)}
+          onClose={() => {
+            setShowListingCreateModal(false);
+            setEditingListing(null);
+          }}
           onListingCreated={handleCreateListing}
           categoryName={editingCard?.name}
+          initialData={editingListing}
+          onSubmit={handleUpdateListing}
         />
       )}
     </div>

@@ -21,53 +21,54 @@ export default function EditCategorySidebar({ card, onClose, onSubmit }) {
     }
   };
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("name", title);
-      formData.append("description", description);
-      if (photo) formData.append("image", photo);
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const formData = new FormData();
+    formData.append("name", title);
+    formData.append("description", description);
+    if (photo) formData.append("image", photo);
 
-      const response = await fetch(
-        `${API_BASE_URL}/admin/edit-category/${card._id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update category");
+    const response = await fetch(
+      `${API_BASE_URL}/admin/edit-category/${card._id}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
       }
+    );
 
-      // Get fresh data after update
-      const freshDataResponse = await fetch(
-        `${API_BASE_URL}/admin/get-all-categories`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (!freshDataResponse.ok) {
-        throw new Error("Failed to fetch updated data");
-      }
-
-      const freshData = await freshDataResponse.json();
-      onSubmit(freshData);
-      onClose(); // Close the sidebar after successful update
-    } catch (error) {
-      console.error("Error updating category:", error);
-      alert("Failed to update category");
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error("Failed to update category");
     }
-  };
+
+    // Get fresh data after update
+    const freshDataResponse = await fetch(
+      `${API_BASE_URL}/admin/get-all-categories`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    if (!freshDataResponse.ok) {
+      throw new Error("Failed to fetch updated data");
+    }
+
+    const freshData = await freshDataResponse.json(); // <--- Fix: parse freshDataResponse here
+
+    onSubmit(freshData); // Pass fresh updated list to parent
+    onClose(); // Close the sidebar after successful update
+  } catch (error) {
+    console.error("Error updating category:", error);
+    alert("Failed to update category");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>

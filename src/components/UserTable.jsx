@@ -94,7 +94,7 @@ export default function UserTable() {
             <table className="min-w-full bg-white border border-gray-200">
               <thead className="bg-blue-100">
                 <tr>
-                  <th className="py-2 px-4 border-b text-left">CODE</th>
+                  {/* <th className="py-2 px-4 border-b text-left">CODE</th> */}
                   <th className="py-2 px-4 border-b text-left">Name</th>
                   <th className="py-2 px-4 border-b text-left">Email</th>
                   <th className="py-2 px-4 border-b text-left">REFERRAL</th>
@@ -103,9 +103,9 @@ export default function UserTable() {
               <tbody>
                 {paginatedUsers.map((user) => (
                   <tr key={user.id || user._id}>
-                    <td className="py-2 px-4 border-b text-left">
+                    {/* <td className="py-2 px-4 border-b text-left">
                       {user.id || user._id || "N/A"}
-                    </td>
+                    </td> */}
                     <td className="py-2 px-4 border-b text-left" >
                       {user.name || user.username || "N/A"}
                     </td>
