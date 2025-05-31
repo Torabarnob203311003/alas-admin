@@ -275,7 +275,7 @@ export default function CardsGrid() {
         <div className="flex justify-between items-center mt-5">
           {editingCard ? (
             <div
-              className="flex justify-between items-center mt-10"
+              className="flex justify-between items-center mt-3"
               style={{ gap: "710px" }}
             >
               <h1 className="text-xl font-bold">All Listings</h1>

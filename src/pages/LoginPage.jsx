@@ -192,12 +192,12 @@ export default function LoginPage() {
 
         {/* Signup Link */}
         <div className="mt-4 sm:mt-6 text-center">
-          <span
+          {/* <span
             className="text-sm text-blue-600 hover:underline cursor-pointer"
             onClick={() => navigate("/signup")}
           >
             Create account
-          </span>
+          </span> */}
         </div>
       </div>
     </div>
