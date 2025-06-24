@@ -10,6 +10,9 @@ import Sidebar from './components/Sidebar.jsx';
 
 import './App.css';
 
+import Blog from './pages/Blog.jsx';
+// import CarApprovalPage from './pages/CarApprovalPage.jsx';
+
 // Protected Route Component
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -90,6 +93,8 @@ function AppRoutes() {
         <Route path="categories" element={<CategoryPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="cards" element={<CardsPage />} />
+        <Route path="blog" element={<Blog />} />
+        {/* <Route path="car-approval" element={<CarApprovalPage />} /> */}
       </Route>
       
       {/* Default Routes */}

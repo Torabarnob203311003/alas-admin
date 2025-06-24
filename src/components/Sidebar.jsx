@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { FaUserFriends, FaCreditCard } from "react-icons/fa";
+import { FaUserFriends, FaCreditCard, FaRegNewspaper, FaCarSide } from "react-icons/fa";
 import logo from "../assets/logo.png";
 
 export default function Sidebar({ sidebarOpen, onClose }) {
@@ -58,6 +58,36 @@ export default function Sidebar({ sidebarOpen, onClose }) {
           >
             <FaCreditCard className="text-lg" /> Cards
           </NavLink>
+
+          {/* New Blog link with isActive */}
+          <NavLink
+            to="/dashboard/blog"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${
+                isActive
+                  ? "bg-white text-black border-2 border-gray-400"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`
+            }
+            onClick={onClose}
+          >
+            <FaRegNewspaper className="text-lg" /> Blog
+          </NavLink>
+
+          {/* New Car Approval link with isActive
+          <NavLink
+            to="/dashboard/car-approval"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${
+                isActive
+                  ? "bg-white text-black border-2 border-gray-400"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`
+            }
+            onClick={onClose}
+          >
+            <FaCarSide className="text-lg" /> Car Approval
+          </NavLink> */}
         </nav>
       </aside>
     </>
