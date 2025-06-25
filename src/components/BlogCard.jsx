@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import axios from "axios";
 import Card from "./Card";
 import EditCategorySidebar from "./EditCategorySidebar";
-import CreateCategoryModal from "./CreateCategoryModal";
 import ShowListingCards from "./ShowListingCards";
 import CreateListingModal from "./CreateListingModal";
 
@@ -33,12 +32,12 @@ export default function BlogCard() {
     try {
       setLoading(true);
       const response = await axios.get(
-        "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
+        "https://newrepo-4pyc.onrender.com/user/all-blogs", // <-- fetch blogs!
         config
       );
       setCardsData(response.data);
     } catch (err) {
-      console.error("Failed to fetch categories:", err);
+      console.error("Failed to fetch blogs:", err);
     } finally {
       setLoading(false);
     }
@@ -53,7 +52,7 @@ export default function BlogCard() {
       const fetchUpdatedData = async () => {
         try {
           const freshData = await axios.get(
-            "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
+            "https://newrepo-4pyc.onrender.com/user/all-blogs",
             config
           );
           setCardsData(freshData.data);
@@ -163,10 +162,16 @@ export default function BlogCard() {
       setLoading(true);
 
       const data = new FormData();
-      data.append("name", formData.title);
+      data.append("title", formData.title);
       data.append("description", formData.description);
-      if (formData.photo) {
-        data.append("image", formData.photo);
+      if (formData.image) {
+        data.append("image", formData.image);
+      }
+      if (formData.tag) {
+        data.append("tag", formData.tag);
+      }
+      if (formData.date) {
+        data.append("date", formData.date);
       }
 
       const token = localStorage.getItem("token");
@@ -178,39 +183,23 @@ export default function BlogCard() {
       };
 
       const response = await axios.post(
-        "https://newrepo-4pyc.onrender.com/admin/create-category",
+        "https://newrepo-4pyc.onrender.com/admin/create-blog",
         data,
         dynamicConfig
       );
 
       if (response.status === 201 || response.status === 200) {
-        const newCategory = response.data;
-        setCardsData((prev) => {
-          const updatedCards = [
-            ...prev,
-            {
-              name: newCategory.name,
-              image: newCategory.image,
-              description: newCategory.description,
-            },
-          ];
-          const lastPage = Math.ceil(updatedCards.length / itemsPerPage);
-          setCurrentPage(lastPage);
-          return updatedCards;
-        });
-
         setShouldRefetch(true);
-
         setShowCreateModal(false);
       } else {
-        console.error("Failed to create category", response.data);
+        console.error("Failed to create blog", response.data);
       }
     } catch (error) {
       console.error(
-        "Error creating new category:",
+        "Error creating new blog:",
         error.response?.data || error.message
       );
-      alert("Failed to create category. Please try again.");
+      alert("Failed to create blog. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -220,7 +209,7 @@ export default function BlogCard() {
     try {
       setShowListingCreateModal(false);
       const freshData = await axios.get(
-        "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
+        "https://newrepo-4pyc.onrender.com/user/all-blogs",
         config
       );
       setCardsData(freshData.data);
@@ -248,7 +237,7 @@ export default function BlogCard() {
     try {
       setLoading(true);
       const response = await axios.get(
-        "https://newrepo-4pyc.onrender.com/admin/get-all-categories",
+        "https://newrepo-4pyc.onrender.com/user/all-blogs",
         config
       );
       setCardsData(response.data);
@@ -288,12 +277,12 @@ export default function BlogCard() {
             </div>
           ) : (
             <>
-              <h1 className="text-xl font-bold">All Categories</h1>
+              <h1 className="text-xl font-bold">All Blogs</h1>
               <button
                 className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded"
                 onClick={() => setShowCreateModal(true)}
               >
-                Create New
+                Create New Blog
               </button>
             </>
           )}
@@ -317,9 +306,13 @@ export default function BlogCard() {
               {paginatedCards.map((card) => (
                 <Card
                   key={card.id || card._id}
-                  card={{ ...card, title: card.name }}
-                  onEditClick={setEditingCard}
-                  onDeleteClick={(card) => handleDelete(card, false)} // Category deletion
+                  card={{
+                    ...card,
+                    title: card.title, // blog title
+                    image: card.image, // blog image
+                    description: card.description, // blog description
+                  }}
+                  // Remove onEditClick/onDeleteClick if you don't need category editing
                 />
               ))}
             </div>
@@ -376,6 +369,100 @@ export default function BlogCard() {
           onSubmit={handleUpdateListing}
         />
       )}
+    </div>
+  );
+}
+
+// Inside CreateCategoryModal (or your blog creation modal)
+function CreateCategoryModal({ onClose, onSubmit }) {
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    tag: "",
+    image: null, // <-- only image
+    date: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      image: e.target.files[0],
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative">
+        <button
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
+          onClick={onClose}
+          type="button"
+        >
+          &times;
+        </button>
+        <h2 className="text-xl font-bold mb-4">Create New Blog</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            placeholder="Enter title"
+            required
+            className="border rounded px-3 py-2"
+          />
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Enter description"
+            required
+            className="border rounded px-3 py-2"
+          />
+          <input
+            type="text"
+            name="tag"
+            value={formData.tag}
+            onChange={handleChange}
+            placeholder="Enter tag"
+            required
+            className="border rounded px-3 py-2"
+          />
+          <input
+            type="file"
+            name="image"
+            onChange={handleFileChange}
+            required
+            className="border rounded px-3 py-2"
+          />
+          <input
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            className="border rounded px-3 py-2"
+          />
+          <button
+            type="submit"
+            className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded"
+          >
+            Create Blog
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
